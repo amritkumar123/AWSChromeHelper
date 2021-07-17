@@ -3,25 +3,35 @@
 	//window.addEventListener('click', )
 //var updateProperties = { 'active': true };
 	// chrome.tabs.update(tabId, updateProperties, (tab) => { });
+
+	// Inject the payload.js script into the current tab after the popout has loaded
+
+	//window.addEventListener('click', )
+//var updateProperties = { 'active': true };
+	// chrome.tabs.update(tabId, updateProperties, (tab) => { });
+	
 	function getRelaventIDs(str,prefix){
 		let set=new Set();
-		while(str && str.length){
+		let ctr=0;
+		while(str && str.length&& ctr<50){
+			ctr++;
 			console.log(str.length);
 			let begIndex= str.indexOf(prefix);
 			if(begIndex==-1)
 				break;
 			let str1 =str.substring(begIndex);
 			let endIndex=str1.split("").findIndex((char)=>{
-				if(char==" "|| char==")"|| char=="\n"){
+				if(char=="\'"|| char=='\"'|| char=="'"|| char=='"'|| char==","|| char==";"||char=="&"||char=="%"|| char==" "|| char==")"|| char=="\n"){
 					return true;
 				}
 			})
-			endIndex=endIndex?endIndex:str1.length;
+			endIndex=(endIndex>-1)?endIndex:str1.length;
 			let pipelineId=str1.substring(0,endIndex);
 			set.add(pipelineId);
 			str=str1.substring(endIndex+1);
 		
 		}
+	
 		return Array.from(set);
 	}
 	
@@ -34,9 +44,8 @@
 			let userinputval = document.getElementById('pipelineID').value.trim();
 			console.log(userinputval);
 
-			let beg=userinputval.indexOf("df-");
-			let pipelineid;
-			if(beg>-1){
+
+			if(userinputval.indexOf("df-")>-1){
 				
 				let pipelineids=getRelaventIDs(userinputval,"df-")
 
@@ -54,7 +63,8 @@
 				})
 
 
-			}else if(userinputval.indexOf("j-")>-1){
+			}
+			 if(userinputval.indexOf("j-")>-1){
 				let pipelineids=getRelaventIDs(userinputval,"j-")
 				pipelineids.forEach(pipelineid=>{
 
@@ -74,13 +84,15 @@
 						//	document.getElementById("loading").appendChild(node);
 					});
 				});
-			}else if(userinputval.indexOf("s3://")>-1){
+			}
+			
+			if(userinputval.indexOf("s3://")>-1){
 		
 				let pipelineids=getRelaventIDs(userinputval,"s3://")
 
 				pipelineids.forEach(pipelineid=>{
 					document.getElementById('loading').innerHTML = "waiting for"+pipelineid;
-
+					pipelineid=pipelineid.substring(5);
 					var newURL = "https://s3.console.aws.amazon.com/s3/object/pipelineid?region=us-east-1&tab=overview";
 					if(pipelineid[pipelineid.length-1]=="/")
 						newURL = "https://s3.console.aws.amazon.com/s3/buckets/pipelineid?region=us-east-1&tab=overview"
@@ -178,7 +190,6 @@
 
 
 	});
-
 
 
 
