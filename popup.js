@@ -3,7 +3,28 @@
 	//window.addEventListener('click', )
 //var updateProperties = { 'active': true };
 	// chrome.tabs.update(tabId, updateProperties, (tab) => { });
-
+	function getRelaventIDs(str,prefix){
+		let set=new Set();
+		while(str && str.length){
+			console.log(str.length);
+			let begIndex= str.indexOf(prefix);
+			if(begIndex==-1)
+				break;
+			let str1 =str.substring(begIndex);
+			let endIndex=str1.split("").findIndex((char)=>{
+				if(char==" "|| char==")"|| char=="\n"){
+					return true;
+				}
+			})
+			endIndex=endIndex?endIndex:str1.length;
+			let pipelineId=str1.substring(0,endIndex);
+			set.add(pipelineId);
+			str=str1.substring(endIndex+1);
+		
+		}
+		return Array.from(set);
+	}
+	
 
 	document.addEventListener("DOMContentLoaded",function () {
 		console.log('dddddd');
@@ -16,26 +37,30 @@
 			let beg=userinputval.indexOf("df-");
 			let pipelineid;
 			if(beg>-1){
-				let pipelineids=[];
-				userinputval.split("df-").forEach(item=>{
-					item=item.trim();
-					let end= item.length;
-					if(item.indexOf("&")>-1){
-						end= item.indexOf("&");
-					}else if(item.indexOf(" ")>-1){
-						end= item.indexOf(" ");
-					}else if(item.indexOf("\n")>-1){
-						end= item.indexOf("\n");
-					}
-					if(item && item.substring(0,end).length)
-						pipelineids.push("df-"+item.substring(0,end));
-				})
+				
+				let pipelineids=getRelaventIDs(userinputval,"df-")
 
-
+				
 				pipelineids.forEach(pipelineid=>{
 					document.getElementById('loading').innerHTML = "waiting for"+pipelineid;
 
 					var newURL = "https://console.aws.amazon.com/datapipeline/home?region=us-east-1#ExecutionDetailsPlace:pipelineId=pipelineid&show=latest";
+
+					newURL=newURL.replace("pipelineid",pipelineid)
+					chrome.tabs.create({ url: newURL, active: false },function(tab){
+						document.getElementById('loading').innerHTML = "waiting for "+pipelineid+" at"+tab.id;
+
+					});
+				})
+
+
+			}else if(userinputval.indexOf("j-")>-1){
+				let pipelineids=getRelaventIDs(userinputval,"j-")
+				pipelineids.forEach(pipelineid=>{
+
+					document.getElementById('loading').innerHTML = "waiting for"+pipelineid;
+
+					var newURL = "https://console.aws.amazon.com/elasticmapreduce/home?region=us-east-1#cluster-details:pipelineid";
 
 					newURL=newURL.replace("pipelineid",pipelineid)
 					chrome.tabs.create({ url: newURL, active: false },function(tab){
@@ -48,51 +73,10 @@
 						///	node.innerHTML=  pipelineid;                           // Append the text to <li>
 						//	document.getElementById("loading").appendChild(node);
 					});
-				})
-
-
-			}else if(userinputval.indexOf("j-")>-1){
-				beg=userinputval.indexOf("j-");
-				pipelineid=userinputval.substring(beg,userinputval.length).trim();
-				let end=pipelineid.indexOf("&");
-				if(end>-1){
-					pipelineid=pipelineid.substring(0,end);
-
-				}
-
-				document.getElementById('loading').innerHTML = "waiting for"+pipelineid;
-
-				var newURL = "https://console.aws.amazon.com/elasticmapreduce/home?region=us-east-1#cluster-details:pipelineid";
-
-				newURL=newURL.replace("pipelineid",pipelineid)
-				chrome.tabs.create({ url: newURL, active: false },function(tab){
-					document.getElementById('loading').innerHTML = "waiting for "+pipelineid+" at"+tab.id;
-
-
-					//document.getElementById('loading').className="tabid";
-					//	var node = document.createElement("a");                 // Create a <li> node
-					// Create a text node
-					///	node.innerHTML=  pipelineid;                           // Append the text to <li>
-					//	document.getElementById("loading").appendChild(node);
 				});
 			}else if(userinputval.indexOf("s3://")>-1){
-				let pipelineids=[];
-				userinputval.split("s3://").forEach(item=>{
-					item=item.trim();
-					let end= item.length;
-					if(item.indexOf("&")>-1){
-						end= item.indexOf("&");
-					}else if(item.indexOf(" ")>-1){
-						end= item.indexOf(" ");
-					}else if(item.indexOf("\n")>-1){
-						end= item.indexOf("\n");
-					}else if(item.indexOf("\t")>-1){
-						end= item.indexOf("\t");
-					}
-					if(item && item.substring(0,end).length)
-						pipelineids.push(item.substring(0,end));
-				})
-
+		
+				let pipelineids=getRelaventIDs(userinputval,"s3://")
 
 				pipelineids.forEach(pipelineid=>{
 					document.getElementById('loading').innerHTML = "waiting for"+pipelineid;
@@ -105,11 +89,6 @@
 						document.getElementById('loading').innerHTML = "waiting for "+pipelineid+" at"+tab.id;
 
 
-						//document.getElementById('loading').className="tabid";
-						//	var node = document.createElement("a");                 // Create a <li> node
-						// Create a text node
-						///	node.innerHTML=  pipelineid;                           // Append the text to <li>
-						//	document.getElementById("loading").appendChild(node);
 					});
 				})
 			}
